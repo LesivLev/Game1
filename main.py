@@ -237,10 +237,15 @@ while run:
         #if(player.hp <= 0):
         #    run = False
     all_sprites.update()
-
+    all_zombies.update()
     screen.fill(BLACK) # заполнение экрана цветом
     all_sprites.draw(screen) # вносим изменения спрайтов на экран
     draw_shield_bar(screen, 5, 5, player.hp)
     pygame.display.flip() # обновление экран (отображение нового кадра)
 
 pygame.quit()
+
+
+# git add *
+# git commit 
+# git push
