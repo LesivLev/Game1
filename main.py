@@ -107,6 +107,10 @@ class Zombie(pygame.sprite.Sprite):
             self.rect.centerx = WIDTH-10
         self.speedx = 0  
         self.speedy = 0
+        self.hp = 20
+
+    def Hp(self):
+        self.hp -= 10
 
     def update(self):
         self.speedx = 0
@@ -133,32 +137,32 @@ class Bullet(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface((5, 10))
         self.image.fill(YELLOW)
-        self.rect=self.image.get_rect()
-        self.rect.centerx = player.rect.x
-        self.rect.centery = player.rect.y
+        self.rect = self.image.get_rect()
+        self.rect.centerx = player.rect.centerx
+        self.rect.centery = player.rect.centery
         self.speedx = 0
         self.speedy = 0
 
     def update(self):
         keystate = pygame.key.get_pressed()
         if keystate[pygame.K_SPACE]:
-            if(zombie.rect.x > self.rect.x):
-                self.speedx = 2
-            if(zombie.rect.x < self.rect.x):
-                self.speedx = -2
-            if(zombie.rect.x == self.rect.x):
-                self.speedx = 0
-            if(zombie.rect.y > self.rect.y):
-                self.speedy = 2
-            if(zombie.rect.y < self.rect.y):
-                self.speedy = -2
-            if(zombie.rect.y == self.rect.y):
+            if(zombie.rect.centerx > self.rect.x):
+                self.speedx = 7
+            if(zombie.rect.centerx < self.rect.x):
+                self.speedx = -7
+            if(zombie.rect.centerx == self.rect.x):
+                self.speedx = 7
+            if(zombie.rect.centery > self.rect.y):
+                self.speedy = 7
+            if(zombie.rect.centery < self.rect.y):
+                self.speedy = -7
+            if(zombie.rect.centery == self.rect.y):
                 self.speedy = 0
             self.rect.x += self.speedx
             self.rect.y += self.speedy
         else:
-            self.rect.x += player.rect.x
-            self.rect.y += player.rect.y
+            self.rect.x = player.rect.centerx
+            self.rect.y = player.rect.centery
 
 class Coin(pygame.sprite.Sprite):
 
@@ -236,6 +240,9 @@ while run:
         player.hit()
         #if(player.hp <= 0):
         #    run = False
+    hits = pygame.sprite.spritecollide(bullet, all_zombies, False)
+    for hit in hits:
+        zombie.Hp()
     all_sprites.update()
     all_zombies.update()
     screen.fill(BLACK) # заполнение экрана цветом
