@@ -117,23 +117,40 @@ class Zombie(pygame.sprite.Sprite):
         self.speedy = 0
 
         if(player.rect.x > self.rect.x):
-            self.speedx = 2
+            self.speedx = 1
         if(player.rect.x < self.rect.x):
-            self.speedx = -2
+            self.speedx = -1
         if(player.rect.x == self.rect.x):
             self.speedx = 0
         if(player.rect.y > self.rect.y):
-            self.speedy = 2
+            self.speedy = 1
         if(player.rect.y < self.rect.y):
-            self.speedy = -2
+            self.speedy = -1
         if(player.rect.y == self.rect.y):
             self.speedy = 0
         
         self.rect.x += self.speedx
         self.rect.y += self.speedy
 
+    def regenerate(self):
+        # Обновить координаты, восполнить жизни
+        tmp = random.randint(0, 4) 
+        if(tmp == 0):
+            self.rect.centery = -10
+            self.rect.centerx = random.randint(-10, WIDTH + 10)
+        elif(tmp == 1):
+            self.rect.centery = HEIGHT+10
+            self.rect.centerx = random.randint(-10, WIDTH + 10)
+        elif(tmp == 2):
+            self.rect.centery = random.randint(-10, HEIGHT + 10)
+            self.rect.centerx = -10
+        elif(tmp == 3):
+            self.rect.centery = random.randint(-10, HEIGHT + 10)
+            self.rect.centerx = WIDTH+10
+        self.hp = 20
+
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, zombie):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface((5, 10))
         self.image.fill(YELLOW)
@@ -142,27 +159,34 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.centery = player.rect.centery
         self.speedx = 0
         self.speedy = 0
+        self.speed = 7
+        self.zombie = zombie
 
     def update(self):
-        keystate = pygame.key.get_pressed()
-        if keystate[pygame.K_SPACE]:
-            if(zombie.rect.centerx > self.rect.x):
-                self.speedx = 7
-            if(zombie.rect.centerx < self.rect.x):
-                self.speedx = -7
-            if(zombie.rect.centerx == self.rect.x):
-                self.speedx = 7
-            if(zombie.rect.centery > self.rect.y):
-                self.speedy = 7
-            if(zombie.rect.centery < self.rect.y):
-                self.speedy = -7
-            if(zombie.rect.centery == self.rect.y):
-                self.speedy = 0
-            self.rect.x += self.speedx
-            self.rect.y += self.speedy
-        else:
-            self.rect.x = player.rect.centerx
-            self.rect.y = player.rect.centery
+        if(self.zombie.rect.centerx > self.rect.x):
+            self.speedx = self.speed
+        if(self.zombie.rect.centerx < self.rect.x):
+            self.speedx = -self.speed
+        if(self.zombie.rect.centerx == self.rect.x):
+            self.speedx = 0
+        if(self.zombie.rect.centery > self.rect.y):
+            self.speedy = self.speed
+        if(self.zombie.rect.centery < self.rect.y):
+            self.speedy = -self.speed
+        if(self.zombie.rect.centery == self.rect.y):
+            self.speedy = 0
+        self.rect.x += self.speedx
+        self.rect.y += self.speedy
+     
+class Wall(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((5, 100))
+        self.image.fill(YELLOW)
+        self.rect = self.image.get_rect()
+        self.rect.centerx = 50
+        self.rect.centery = 250
+
 
 class Coin(pygame.sprite.Sprite):
 
@@ -209,18 +233,18 @@ all_sprites = pygame.sprite.Group()
 all_zombies = pygame.sprite.Group()
 player = Player() # создаем переменную player класса Player
 #dog =  Dog()
-bullet = Bullet()
+# bullet = Bullet()
 #coin = Coin()
 #all_sprites.add(coin)
-all_sprites.add(bullet)
+# all_sprites.add(bullet)
 #all_sprites.add(dog)
 all_sprites.add(player) # добавляем игрока в группу всех спрайтов
 for i in range (0, 3):
     zombie = Zombie()
     all_sprites.add(zombie)
-for i in range (0, 3):
-    zombie = Zombie()
     all_zombies.add(zombie)
+
+isBulletActive = False
 
 # Игровой цикл
 # 1 - проверить, что цикл работает на правильной частоте обновления кадров
@@ -229,22 +253,43 @@ for i in range (0, 3):
 # 4 - вывод изменений на экран
 
 run = True # переменная, которая отвечает за запуск игрового dикла
+bullet = None
 while run:
     clock.tick(FPS) # проверка пункта 1
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
     
+    keystate = pygame.key.get_pressed()
+    if keystate[pygame.K_SPACE]:
+        if isBulletActive == False:
+            isBulletActive = True
+            bullet = Bullet(all_zombies.sprites()[0])
+            all_sprites.add(bullet)
+
     hits = pygame.sprite.spritecollide(player, all_zombies, False)
     for hit in hits:
         player.hit()
-        #if(player.hp <= 0):
-        #    run = False
-    hits = pygame.sprite.spritecollide(bullet, all_zombies, False)
-    for hit in hits:
-        zombie.Hp()
+        if(player.hp <= 0):
+            run = False
+
+    if isBulletActive:
+        hits = pygame.sprite.spritecollide(bullet, all_zombies, False)
+        for zombie in hits:
+            bullet.remove(all_sprites)
+            # удалить спрайт пули
+            isBulletActive = False
+            zombie.Hp()
+            if zombie.hp == 0:
+                zombie.regenerate()
+                # zombie.remove(all_sprites, all_zombies)
+                # zombie = Zombie()
+                # all_sprites.add(zombie)
+                # all_zombies.add(zombie)
+
     all_sprites.update()
-    all_zombies.update()
+    all_zombies.update() # надо понять почему эта строка не нужна
+
     screen.fill(BLACK) # заполнение экрана цветом
     all_sprites.draw(screen) # вносим изменения спрайтов на экран
     draw_shield_bar(screen, 5, 5, player.hp)
@@ -252,6 +297,12 @@ while run:
 
 pygame.quit()
 
+
+# TODO: добавить время между регенарацией зомби
+# TODO: выровнять баланс скоростей
+# TODO: сделать шире поле
+# TODO: добавить препятствия
+# TODO: находить и выбирать при создании пули ближайшего зомби
 
 # git add *
 # git commit 
