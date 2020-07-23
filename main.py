@@ -5,6 +5,7 @@
 import pygame
 import random
 import math
+from os import path
 
 # ширина, высота, фпс (частота кадров), основные цвета
 WIDTH = 800
@@ -63,7 +64,7 @@ class Player(pygame.sprite.Sprite):
         self.speedy = 0
         self.score = 0
         
-    def update(self):
+    def update(self, text=""):
         self.speedx = 0
         self.speedy = 0
         keystate = pygame.key.get_pressed()
@@ -76,6 +77,10 @@ class Player(pygame.sprite.Sprite):
             self.speedy = 5
         if keystate[pygame.K_UP]:
             self.speedy = -5
+
+        if text == "pauza":
+            self.speedx = 0
+            self.speedy = 0
 
         self.rect.x += self.speedx
         self.rect.y += self.speedy
@@ -91,6 +96,37 @@ class Player(pygame.sprite.Sprite):
 
     def hit(self):
         self.hp -= 1
+
+    def hitwall(self):
+        bottomSideHit = (self.rect.right >= wall.rect.left and self.rect.right <= wall.rect.right) or (self.rect.left >= wall.rect.left and self.rect.left <= wall.rect.right) and self.rect.bottom <= wall.rect.bottom and self.rect.bottom >= wall.rect.top
+        topSideHit = (self.rect.right >= wall.rect.left and self.rect.right <= wall.rect.right) or (self.rect.left >= wall.rect.left and self.rect.left <= wall.rect.right) and self.rect.top >= wall.rect.bottom and self.rect.top <= wall.rect.top
+        leftSideHit = self.rect.left <= wall.rect.left and self.rect.left >= wall.rect.right and (self.rect.top >= wall.rect.bottom and self.rect.top <= wall.rect.top) or (self.rect.bottom >= wall.rect.bottom and self.rect.bottom <= wall.rect.top)
+        rightSideHit = self.rect.right >= wall.rect.left and self.rect.right <= wall.rect.right and (self.rect.top >= wall.rect.bottom and self.rect.top <= wall.rect.top) or (self.rect.bottom >= wall.rect.bottom and self.rect.bottom <= wall.rect.top)
+        
+        #if(self.rect.right >= wall.rect.left and self.rect.right <= wall.rect.right and (self.rect.top >= wall.rect.bottom and self.rect.top <= wall.rect.top) or (self.rect.bottom >= wall.rect.bottom and self.rect.bottom <= wall.rect.top)):
+        #    self.rect.right = wall.rect.left
+        #elif(self.rect.left <= wall.rect.left and self.rect.left >= wall.rect.right and (self.rect.top >= wall.rect.bottom and self.rect.top <= wall.rect.top) or (self.rect.bottom >= wall.rect.bottom and self.rect.bottom <= wall.rect.top)):
+        #    self.rect.left = wall.rect.right
+        # elif((self.rect.right >= wall.rect.left and self.rect.right <= wall.rect.right) or (self.rect.left >= wall.rect.left and self.rect.left <= wall.rect.right) and self.rect.top >= wall.rect.bottom and self.rect.top <= wall.rect.top):
+        #     self.rect.top = wall.rect.bottom
+        # elif((self.rect.right >= wall.rect.left and self.rect.right <= wall.rect.right) or (self.rect.left >= wall.rect.left and self.rect.left <= wall.rect.right) and self.rect.bottom <= wall.rect.bottom and self.rect.bottom >= wall.rect.top):
+        #     self.rect.bottom = wall.rect.top
+        if(bottomSideHit):
+            if keystate[pygame.K_DOWN]:
+                self.speedy = 5
+            self.rect.y -= self.speedy
+        if(topSideHit):
+            if keystate[pygame.K_UP]:
+                self.speedy = 5
+            self.rect.y -= self.speedy
+        if(leftSideHit):
+            if keystate[pygame.K_LEFT]:
+                self.speedy = 5
+            self.rect.x -= self.speedx
+        if(rightSideHit):
+            if keystate[pygame.K_RIGHT]:
+                self.speedy = 5
+            self.rect.x -= self.speedx
 
 
 class Zombie(pygame.sprite.Sprite):
@@ -140,6 +176,10 @@ class Zombie(pygame.sprite.Sprite):
         if(player.rect.y == self.rect.y):
             self.speedy = 0
         
+        if text == "pauza":
+            self.speedx = 0
+            self.speedy = 0
+
         self.rect.x += self.speedx
         self.rect.y += self.speedy
 
@@ -193,7 +233,7 @@ class Bullet(pygame.sprite.Sprite):
         # if min(a, b, c) == a:
         #     return zombie1
 
-    def update(self):
+    def update(self, text=""):
         self.zombie = self.next_zombie()
         if(self.zombie.rect.centerx > self.rect.x):
             self.speedx = self.speed
@@ -207,6 +247,11 @@ class Bullet(pygame.sprite.Sprite):
             self.speedy = -self.speed
         if(self.zombie.rect.centery == self.rect.y):
             self.speedy = 0
+
+        if text == "pauza":
+            self.speedx = 0
+            self.speedy = 0
+
         self.rect.x += self.speedx
         self.rect.y += self.speedy
         
@@ -254,9 +299,45 @@ class Dog(pygame.sprite.Sprite):
         self.rect.x += self.speedx
         self.rect.y += self.speedy
 
+background = pygame.image.load(path.join(path.dirname(__file__) , 'background.jpg'))
+background_rect = background.get_rect()
+
+font_name = pygame.font.match_font('comicsansms')
+def draw_text(surf, text, size, x, y):
+    font = pygame.font.Font(font_name, size)
+    text_surface = font.render(text, True, WHITE)
+    text_rect = text_surface.get_rect()
+    text_rect.midtop = (x, y)
+    surf.blit(text_surface, text_rect)
+
+def show_start_screen():
+    screen.blit(background, background_rect)
+    draw_text(screen, "Zombie", 64, WIDTH / 2, HEIGHT / 4)
+    draw_text(screen, " Нажмите пробел для прыжка, и C для приседания", 18, WIDTH / 2, HEIGHT / 2)
+    draw_text(screen, "Нажми любую клавишу для старта", 18, WIDTH / 2, HEIGHT * 3 / 4)
+    pygame.display.flip()
+    i = 0
+    waiting = True
+    while waiting:
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type != keystate[pygame.K_ESCAPE]:
+                waiting = False
+    waiting = True
+    while waiting:
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+            if event.type != keystate[pygame.K_ESCAPE]:
+                waiting = False
+    
 # Создать группы спрайтов, чтобы работать с ними со всеми одновременно
 all_sprites = pygame.sprite.Group()
 all_zombies = pygame.sprite.Group()
+all_walls = pygame.sprite.Group() 
 player = Player() # создаем переменную player класса Player
 #dog =  Dog()
 # bullet = Bullet()
@@ -267,25 +348,33 @@ player = Player() # создаем переменную player класса Play
 all_sprites.add(player) # добавляем игрока в группу всех спрайтов
 wall = Wall()
 all_sprites.add(wall)
-for i in range(0, 3):
+for i in range(0, 1):
     zombie = Zombie()
     all_sprites.add(zombie)
     all_zombies.add(zombie)
+all_walls.add(wall)
 
 isBulletActive = False
+isWallshdPlayer = False
 
 # Игровй цикл
 # 1 - проверить, что цикл работает на правильной частоте обновления кадров
 # 2 - обработка ввода
 # 3 - обновление данных
 # 4 - вывод изменений на экран
-
+zombie1 = Zombie()
 run = True # переменная, которая отвечает за запуск игрового dикла
 bullet = None
 killedZombie = 0
 ifLevelup = False
 level = 0
+
+isStopped = False
 while run:
+    if isStopped:
+       show_start_screen()
+       isStopped = False
+       
     clock.tick(FPS) # проверка пункта 1
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -298,6 +387,9 @@ while run:
             bullet = Bullet(all_zombies.sprites()[0])
             all_sprites.add(bullet)
             player.score -= 1
+    
+    if keystate[pygame.K_ESCAPE]:
+            isStopped = True
 
     hits = pygame.sprite.spritecollide(player, all_zombies, False)
     for hit in hits:
@@ -305,6 +397,10 @@ while run:
         if(player.hp <= 0):
             run = False
 
+    hits = pygame.sprite.spritecollide(player, all_walls, False)
+    for hit in hits:
+        player.hitwall()
+    
     if isBulletActive:
         hits = pygame.sprite.spritecollide(bullet, all_zombies, False)
         for zombie in hits:
@@ -328,7 +424,9 @@ while run:
                 # all_zombies.add(zombie)
 
     if (zombie.rect.centerx >= 0 and zombie.rect.centery >= 0) or (zombie.rect.centerx <= WIDTH and zombie.rect.centery >= 0) or (zombie.rect.centerx >= 0 and zombie.rect.centery <= HEIGHT) or (zombie.rect.centerx <= WIDTH and zombie.rect.centery <= HEIGHT):
-        killedZombie -= 0
+        if(zombie1 == zombie):
+            killedZombie -= 1
+            zombie1 = zombie
 
     if player.score >= 100:
         ifLevelup = True
@@ -356,11 +454,13 @@ while run:
 
 pygame.quit()
 
+
 # TODO: добавить время между регенарацией зомби
 # TODO: выровнять баланс скоростей
 # TODO: сделать шире поле
 # TODO: добавить препятствия
 # TODO: находить и выбирать при создании пули ближайшего зомби
+# TODO: cт
 
 # git add *
 # git commit 
