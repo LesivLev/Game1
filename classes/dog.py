@@ -1,6 +1,6 @@
 import pygame
 
-from const import BLUE
+from classes.const import BLUE
 
 
 class Dog(pygame.sprite.Sprite):

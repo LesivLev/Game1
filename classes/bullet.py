@@ -2,7 +2,7 @@ import math
 
 import pygame
 
-from const import YELLOW
+from classes.const import YELLOW
 
 
 class Bullet(pygame.sprite.Sprite):

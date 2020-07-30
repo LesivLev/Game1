@@ -7,11 +7,11 @@ from os import path
 import pygame
 
 # ширина, высота, фпс (частота кадров), основные цвета
-from bullet import Bullet
-from const import WIDTH, HEIGHT, FPS, GREEN, BLUE, YELLOW, BLACK, WHITE, PURPLE
-from player import Player
-from wall import Wall
-from zombie import Zombie
+from classes.bullet import Bullet
+from classes.const import WIDTH, HEIGHT, FPS, GREEN, BLUE, YELLOW, BLACK, WHITE, PURPLE
+from classes.player import Player
+from classes.wall import Wall
+from classes.zombie import Zombie
 
 # цвета задаются по RGB (КЗС) от 0 до 255
 # Черный - 0 цветов

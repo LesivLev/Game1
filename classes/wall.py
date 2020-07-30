@@ -1,6 +1,6 @@
 import pygame
 
-from const import WIDTH, HEIGHT, PURPLE
+from classes.const import WIDTH, HEIGHT, PURPLE
 
 
 class Wall(pygame.sprite.Sprite):

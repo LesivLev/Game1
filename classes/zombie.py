@@ -2,7 +2,7 @@ import random
 
 import pygame
 
-from const import WIDTH, HEIGHT, GREEN
+from classes.const import WIDTH, HEIGHT, GREEN
 
 
 class Zombie(pygame.sprite.Sprite):
